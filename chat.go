@@ -93,8 +93,15 @@ type ChatMessagePart struct {
 }
 
 type ChatCompletionMessage struct {
-	Role         string `json:"role"`
-	Content      string `json:"content,omitempty"`
+	Role string `json:"role"`
+
+	// This property is used for the "reasoning" feature supported by deepseek-reasoner
+	// which is not in the official documentation.
+	// the doc from deepseek:
+	// - https://api-docs.deepseek.com/api/create-chat-completion#responses
+	ReasoningContent string `json:"reasoning_content,omitempty"`
+
+	Content      string `json:"content"`
 	Refusal      string `json:"refusal,omitempty"`
 	MultiContent []ChatMessagePart
 
@@ -103,12 +110,6 @@ type ChatCompletionMessage struct {
 	// - https://github.com/openai/openai-python/blob/main/chatml.md
 	// - https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
 	Name string `json:"name,omitempty"`
-
-	// This property is used for the "reasoning" feature supported by deepseek-reasoner
-	// which is not in the official documentation.
-	// the doc from deepseek:
-	// - https://api-docs.deepseek.com/api/create-chat-completion#responses
-	ReasoningContent string `json:"reasoning_content,omitempty"`
 
 	FunctionCall *FunctionCall `json:"function_call,omitempty"`
 
@@ -126,11 +127,11 @@ func (m ChatCompletionMessage) MarshalJSON() ([]byte, error) {
 	if len(m.MultiContent) > 0 {
 		msg := struct {
 			Role             string            `json:"role"`
+			ReasoningContent string            `json:"reasoning_content,omitempty"`
 			Content          string            `json:"-"`
 			Refusal          string            `json:"refusal,omitempty"`
 			MultiContent     []ChatMessagePart `json:"content,omitempty"`
 			Name             string            `json:"name,omitempty"`
-			ReasoningContent string            `json:"reasoning_content,omitempty"`
 			FunctionCall     *FunctionCall     `json:"function_call,omitempty"`
 			ToolCalls        []ToolCall        `json:"tool_calls,omitempty"`
 			ToolCallID       string            `json:"tool_call_id,omitempty"`
@@ -140,11 +141,11 @@ func (m ChatCompletionMessage) MarshalJSON() ([]byte, error) {
 
 	msg := struct {
 		Role             string            `json:"role"`
+		ReasoningContent string            `json:"reasoning_content,omitempty"`
 		Content          string            `json:"content,omitempty"`
 		Refusal          string            `json:"refusal,omitempty"`
 		MultiContent     []ChatMessagePart `json:"-"`
 		Name             string            `json:"name,omitempty"`
-		ReasoningContent string            `json:"reasoning_content,omitempty"`
 		FunctionCall     *FunctionCall     `json:"function_call,omitempty"`
 		ToolCalls        []ToolCall        `json:"tool_calls,omitempty"`
 		ToolCallID       string            `json:"tool_call_id,omitempty"`
@@ -155,11 +156,11 @@ func (m ChatCompletionMessage) MarshalJSON() ([]byte, error) {
 func (m *ChatCompletionMessage) UnmarshalJSON(bs []byte) error {
 	msg := struct {
 		Role             string `json:"role"`
+		ReasoningContent string `json:"reasoning_content,omitempty"`
 		Content          string `json:"content"`
 		Refusal          string `json:"refusal,omitempty"`
 		MultiContent     []ChatMessagePart
 		Name             string        `json:"name,omitempty"`
-		ReasoningContent string        `json:"reasoning_content,omitempty"`
 		FunctionCall     *FunctionCall `json:"function_call,omitempty"`
 		ToolCalls        []ToolCall    `json:"tool_calls,omitempty"`
 		ToolCallID       string        `json:"tool_call_id,omitempty"`
@@ -171,11 +172,11 @@ func (m *ChatCompletionMessage) UnmarshalJSON(bs []byte) error {
 	}
 	multiMsg := struct {
 		Role             string `json:"role"`
+		ReasoningContent string `json:"reasoning_content,omitempty"`
 		Content          string
 		Refusal          string            `json:"refusal,omitempty"`
 		MultiContent     []ChatMessagePart `json:"content"`
 		Name             string            `json:"name,omitempty"`
-		ReasoningContent string            `json:"reasoning_content,omitempty"`
 		FunctionCall     *FunctionCall     `json:"function_call,omitempty"`
 		ToolCalls        []ToolCall        `json:"tool_calls,omitempty"`
 		ToolCallID       string            `json:"tool_call_id,omitempty"`
