@@ -93,8 +93,7 @@ type ChatMessagePart struct {
 }
 
 type ChatCompletionMessage struct {
-	Role string `json:"role"`
-
+	Role         string `json:"role"`
 	Content      string `json:"content"`
 	Refusal      string `json:"refusal,omitempty"`
 	MultiContent []ChatMessagePart
