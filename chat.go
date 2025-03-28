@@ -281,6 +281,45 @@ type ChatCompletionRequest struct {
 	// Such as think mode for qwen3. "chat_template_kwargs": {"enable_thinking": false}
 	// https://qwen.readthedocs.io/en/latest/deployment/vllm.html#thinking-non-thinking-modes
 	ChatTemplateKwargs map[string]any `json:"chat_template_kwargs,omitempty"`
+	// Add additional JSON properties to the request
+	ExtraBody map[string]any `json:"extra_body,omitempty"`
+}
+
+func (m ChatCompletionRequest) MarshalJSON() ([]byte, error) {
+	// Create a new anonymous struct that omits ExtraBody
+	type Alias ChatCompletionRequest
+	temp := struct {
+		Alias
+		ExtraBody map[string]any `json:"-"` // Omit ExtraBody from direct serialization
+	}{
+		Alias:     Alias(m),
+		ExtraBody: m.ExtraBody,
+	}
+
+	// First marshal the main structure
+	data, err := json.Marshal(temp)
+	if err != nil {
+		return nil, err
+	}
+
+	// If there's no ExtraBody, return the marshaled data as is
+	if len(m.ExtraBody) == 0 {
+		return data, nil
+	}
+
+	// Unmarshal into a map to modify the JSON structure
+	var rawMap map[string]any
+	if err := json.Unmarshal(data, &rawMap); err != nil {
+		return nil, err
+	}
+
+	// Add ExtraBody fields to the root level
+	for k, v := range m.ExtraBody {
+		rawMap[k] = v
+	}
+
+	// Marshal the combined map back to JSON
+	return json.Marshal(rawMap)
 }
 
 type StreamOptions struct {
