@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 )
 
@@ -79,17 +80,63 @@ type ChatMessageImageURL struct {
 	Detail ImageURLDetail `json:"detail,omitempty"`
 }
 
+type ChatMessageVideoURL struct {
+	URL    string         `json:"url,omitempty"`
+	Fps    float64        `json:"fps,omitempty"`
+	Detail ImageURLDetail `json:"detail,omitempty"`
+}
+
+type ChatMessageVideo struct {
+	URL       string   `json:"-"`
+	ImageURLs []string `json:"-"`
+}
+
+func (v *ChatMessageVideo) MarshalJSON() ([]byte, error) {
+	if len(v.ImageURLs) > 0 {
+		return json.Marshal(v.ImageURLs)
+	} else if v.URL != "" {
+		return json.Marshal(v.URL)
+	}
+	return nil, nil
+}
+
+func (v *ChatMessageVideo) UnmarshalJSON(data []byte) error {
+	var i any
+	if err := json.Unmarshal(data, &i); err != nil {
+		return err
+	}
+	switch t := i.(type) {
+	case string:
+		v.URL = t
+	case []any:
+		v.URL = ""
+		v.ImageURLs = make([]string, 0, len(t))
+		for _, l := range t {
+			if s, ok := l.(string); ok {
+				v.ImageURLs = append(v.ImageURLs, s)
+			}
+		}
+	default:
+		return fmt.Errorf("invalid type for url field: %T", t)
+	}
+	return nil
+}
+
 type ChatMessagePartType string
 
 const (
 	ChatMessagePartTypeText     ChatMessagePartType = "text"
 	ChatMessagePartTypeImageURL ChatMessagePartType = "image_url"
+	ChatMessagePartTypeVideoURL ChatMessagePartType = "video_url"
+	ChatMessagePartTypeVideo    ChatMessagePartType = "video"
 )
 
 type ChatMessagePart struct {
 	Type     ChatMessagePartType  `json:"type,omitempty"`
 	Text     string               `json:"text,omitempty"`
 	ImageURL *ChatMessageImageURL `json:"image_url,omitempty"`
+	VideoURL *ChatMessageVideoURL `json:"video_url,omitempty"`
+	Video    *ChatMessageVideo    `json:"video,omitempty"`
 }
 
 type ChatCompletionMessage struct {
