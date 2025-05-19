@@ -273,49 +273,19 @@ type ChatCompletionRequest struct {
 	ReasoningEffort string `json:"reasoning_effort,omitempty"`
 	// Metadata to store with the completion.
 	Metadata map[string]string `json:"metadata,omitempty"`
+	// Configuration for a predicted output.
+	Prediction *Prediction `json:"prediction,omitempty"`
+	// ChatTemplateKwargs provides a way to add non-standard parameters to the request body.
+	// Additional kwargs to pass to the template renderer. Will be accessible by the chat template.
+	// Such as think mode for qwen3. "chat_template_kwargs": {"enable_thinking": false}
+	// https://qwen.readthedocs.io/en/latest/deployment/vllm.html#thinking-non-thinking-modes
+	ChatTemplateKwargs map[string]any `json:"chat_template_kwargs,omitempty"`
 	// Add additional JSON properties to the request
 	ExtraBody map[string]any `json:"extra_body,omitempty"`
 	// ExtraHeaders to add to the request
 	ExtraHeaders map[string]string `json:"extra_headers,omitempty"`
 	// ExtraQueryParams to add to the request
 	ExtraQuery map[string]string `json:"extra_query,omitempty"`
-}
-
-func (m ChatCompletionRequest) MarshalJSON() ([]byte, error) {
-	// Create a new anonymous struct that omits ExtraBody
-	type Alias ChatCompletionRequest
-	temp := struct {
-		Alias
-		ExtraBody map[string]any `json:"-"` // Omit ExtraBody from direct serialization
-	}{
-		Alias:     Alias(m),
-		ExtraBody: m.ExtraBody,
-	}
-
-	// First marshal the main structure
-	data, err := json.Marshal(temp)
-	if err != nil {
-		return nil, err
-	}
-
-	// If there's no ExtraBody, return the marshaled data as is
-	if len(m.ExtraBody) == 0 {
-		return data, nil
-	}
-
-	// Unmarshal into a map to modify the JSON structure
-	var rawMap map[string]any
-	if err := json.Unmarshal(data, &rawMap); err != nil {
-		return nil, err
-	}
-
-	// Add ExtraBody fields to the root level
-	for k, v := range m.ExtraBody {
-		rawMap[k] = v
-	}
-
-	// Marshal the combined map back to JSON
-	return json.Marshal(rawMap)
 }
 
 type StreamOptions struct {
@@ -381,6 +351,11 @@ type LogProb struct {
 type LogProbs struct {
 	// Content is a list of message content tokens with log probability information.
 	Content []LogProb `json:"content"`
+}
+
+type Prediction struct {
+	Content string `json:"content"`
+	Type    string `json:"type"`
 }
 
 type FinishReason string
