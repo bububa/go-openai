@@ -2,6 +2,7 @@ package openai
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -42,6 +43,8 @@ type MessageContent struct {
 	Text      *MessageText `json:"text,omitempty"`
 	ImageFile *ImageFile   `json:"image_file,omitempty"`
 	ImageURL  *ImageURL    `json:"image_url,omitempty"`
+	VideoURL  *VideoURL    `json:"video_url,omitempty"`
+	Video     *Video       `json:"video,omitempty"`
 }
 type MessageText struct {
 	Value       string `json:"value"`
@@ -54,7 +57,49 @@ type ImageFile struct {
 
 type ImageURL struct {
 	URL    string `json:"url"`
-	Detail string `json:"detail"`
+	Detail string `json:"detail,omitempty"`
+}
+
+type VideoURL struct {
+	URL    string  `json:"url"`
+	Fps    float64 `json:"fps,omitempty"`
+	Detail string  `json:"detail,omitempty"`
+}
+
+type Video struct {
+	URL       string   `json:"-"`
+	ImageURLs []string `json:"-"`
+}
+
+func (v *Video) MarshalJSON() ([]byte, error) {
+	if len(v.ImageURLs) > 0 {
+		return json.Marshal(v.ImageURLs)
+	} else if v.URL != "" {
+		return json.Marshal(v.URL)
+	}
+	return nil, nil
+}
+
+func (v *Video) UnmarshalJSON(data []byte) error {
+	var i any
+	if err := json.Unmarshal(data, &i); err != nil {
+		return err
+	}
+	switch t := i.(type) {
+	case string:
+		v.URL = t
+	case []any:
+		v.URL = ""
+		v.ImageURLs = make([]string, 0, len(t))
+		for _, l := range t {
+			if s, ok := l.(string); ok {
+				v.ImageURLs = append(v.ImageURLs, s)
+			}
+		}
+	default:
+		return fmt.Errorf("invalid type for url field: %T", t)
+	}
+	return nil
 }
 
 type MessageRequest struct {
