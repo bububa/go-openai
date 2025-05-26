@@ -333,17 +333,21 @@ type ChatCompletionRequest struct {
 	ExtraHeaders map[string]string `json:"extra_headers,omitempty"`
 	// ExtraQueryParams to add to the request
 	ExtraQuery map[string]string `json:"extra_query,omitempty"`
-  // Thinking thinking type
-  Thinking ThinkingType `json:"thinking,omitempty"`
+	// Thinking thinking type
+	Thinking *Thinking `json:"thinking,omitempty"`
 }
 
 type ThinkingType string
 
-const(
-  ThinkingTypeEnabled ThinkingType = "enabled"
-  ThinkingTypeDisabled ThinkingType = "disabled"
-  ThinkingTypeAuto ThinkingType = "auto"
+const (
+	ThinkingTypeEnabled  ThinkingType = "enabled"
+	ThinkingTypeDisabled ThinkingType = "disabled"
+	ThinkingTypeAuto     ThinkingType = "auto"
 )
+
+type Thinking struct {
+	Type ThinkingType `json:"type,omitempty"`
+}
 
 type StreamOptions struct {
 	// If set, an additional chunk will be streamed before the data: [DONE] message.
